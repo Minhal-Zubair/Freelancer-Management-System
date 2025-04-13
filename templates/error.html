@@ -1,0 +1,17 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container text-center py-5">
+    <div class="mb-4">
+        <span class="display-1 d-block">{{ error_code }}</span>
+        <div class="mb-4 lead">{{ error_message }}</div>
+    </div>
+    
+    <div>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+        {% if previous_url %}
+        <a href="{{ previous_url }}" class="btn btn-outline-secondary">Go Back</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
