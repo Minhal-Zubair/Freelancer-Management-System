@@ -1,0 +1,221 @@
+🔧 DETAILED AI PROMPT: Build a Full-Stack Freelancer Project Management System
+Objective: Build a full-stack web application called "Freelancer Project Management System" that allows individual freelancers to manage their clients, projects, deadlines, time tracking, billing, and reporting efficiently.
+
+🔨 Technologies to Use
+Backend:
+Python (Flask or Django)
+
+Flask preferred for lightweight, Django if you prefer built-in admin and auth
+
+ORM: SQLAlchemy (if Flask) or Django ORM
+
+Security: bcrypt for password hashing
+
+Email: SMTP integration (or SendGrid API for transactional email)
+
+Frontend:
+HTML5, CSS3 (with Bootstrap 5 or Tailwind CSS)
+
+JavaScript (Vanilla JS or jQuery)
+
+Optional: React.js or Vue.js for advanced frontend
+
+Database:
+MySQL
+
+Use proper indexing, foreign keys, and normalized tables
+
+Optional:
+FullCalendar.js for calendar view
+
+Chart.js for analytics dashboards
+
+Gantt charts for task dependencies (e.g., Google Charts or DHTMLX Gantt)
+
+AJAX for seamless user experience
+
+📁 Project Features
+🔐 1. User Authentication
+Freelancer Registration
+
+Fields: name, email, password, phone number
+
+Validate email & phone
+
+Auto-generate unique Freelancer ID
+
+Password hashing with bcrypt
+
+Secure Login (Email/Username + Password)
+
+Session-based authentication with cookies
+
+Login session tracking (IP, device info, login time)
+
+👤 2. Freelancer Profile
+Edit/view personal information
+
+Upload profile picture
+
+Show linked projects, total earnings, task stats
+
+📁 3. Project Management
+Create Projects
+
+Fields: title, description, client, deadline, price, priority, attached files
+
+Project Status
+
+Status values: New, In Progress, On Hold, Completed
+
+Progress bar or percentage
+
+Project Alerts
+
+Deadline warnings, overdue notices, priority flags
+
+Filtering & Sorting
+
+By date, status, client, earnings, tags
+
+Project Attachments
+
+Upload files per project
+
+Accept .pdf, .docx, .xlsx, .jpg, .png
+
+🧑‍💼 4. Client Management
+Add/Edit client information
+
+Fields: name, email, phone, organization, classification (Individual, Agency, Recurring)
+
+Notes for each client
+
+Link projects to clients
+
+View client history and associated earnings
+
+📊 5. Reporting & Analytics
+Dashboard with charts:
+
+Monthly/yearly earnings
+
+Completed vs. ongoing projects
+
+Most active clients
+
+Downloadable Reports (PDF/CSV)
+
+Income per client, per project
+
+Client performance
+
+Completion timelines
+
+⏱ 6. Time & Deadline Management
+Calendar view of all deadlines (use FullCalendar.js)
+
+Deadline-based alerts
+
+Manual/automatic task timer:
+
+Start/Stop timer per project
+
+Record total time spent per day/task/project
+
+🔗 7. Task & Dependency Tracking
+Create tasks within projects
+
+Assign start/end dates, status, priority
+
+Task Dependencies:
+
+Define relationships like "Task B depends on Task A"
+
+Display as a Gantt chart
+
+💰 8. Payment & Billing
+Generate invoices per project or milestone
+
+Include: title, freelancer rate, project duration, tax, total
+
+Invoice status: Paid, Unpaid, Overdue
+
+Track all payments
+
+Payment due date, payment method, transaction ID
+
+🧑‍💻 9. Freelancer Dashboard
+Personalized overview:
+
+Active Projects
+
+Calendar widget
+
+Earnings summary
+
+Recent activity
+
+Customizable UI (dark mode, date format, currency)
+
+🔍 10. Search, Tags & Filters
+Advanced Search:
+
+By project name, client, status, deadline, tags
+
+Tagging system:
+
+Add custom tags to projects and clients (Urgent, Recurring, Long-Term)
+
+🔔 11. Notifications & Alerts
+Email notifications for:
+
+New project creation
+
+Nearing deadlines
+
+Invoices due
+
+Real-time alerts (popups/toasts) for:
+
+Project status changes
+
+Timer stop reminder
+
+🗃️ Suggested MySQL Database Schema
+Table Name	Description
+freelancers	Freelancer user info (id, name, email, phone, password_hash, etc.)
+login_sessions	Stores login session details
+projects	Project info (id, title, description, client_id, status, deadline, etc.)
+project_files	Project-related uploaded files
+clients	Client info (id, name, contact info, classification)
+project_tags	Tags for projects
+tasks	Sub-tasks in projects
+task_dependencies	Map of task-to-task dependencies
+time_logs	Time tracking data (start, stop, project_id, task_id)
+invoices	Invoice info (amount, status, related project/client)
+alerts	Email/notification alerts
+milestones	Key milestones per project
+notifications	App-wide or user-specific alerts
+📂 Deliverables (Ideal Project Structure)
+pgsql
+Copy
+Edit
+freelancer_pm_system/
+├── backend/
+│   ├── app.py (Flask app) or manage.py (Django)
+│   ├── models/
+│   ├── routes/
+│   ├── templates/
+│   └── static/
+├── database/
+│   └── schema.sql
+├── frontend/
+│   ├── index.html
+│   ├── dashboard.html
+│   └── js/
+├── static/
+│   ├── css/
+│   └── js/
+├── requirements.txt
+└── README.md
