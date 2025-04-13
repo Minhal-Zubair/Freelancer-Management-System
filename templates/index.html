@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row align-items-center">
+    <div class="col-lg-6">
+        <div class="mb-5">
+            <h1 class="display-4 fw-bold mb-4">Freelancer Project Management System</h1>
+            <p class="lead mb-4">
+                Take control of your freelance business with a comprehensive management system.
+                Track projects, clients, time, and invoices all in one place.
+            </p>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-4 me-md-2">Get Started</a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-lg px-4">Login</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="text-center">
+            <svg width="500" height="320" viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg" class="img-fluid">
+                <rect x="60" y="40" width="380" height="240" rx="10" fill="#343a40" stroke="#6c757d" stroke-width="2"/>
+                <rect x="80" y="70" width="340" height="50" rx="5" fill="#495057"/>
+                <rect x="100" y="85" width="120" height="20" rx="3" fill="#6c757d"/>
+                <rect x="240" y="85" width="80" height="20" rx="3" fill="#6c757d"/>
+                <rect x="340" y="85" width="60" height="20" rx="3" fill="#0d6efd"/>
+                
+                <rect x="80" y="130" width="160" height="130" rx="5" fill="#495057"/>
+                <rect x="100" y="150" width="120" height="15" rx="3" fill="#6c757d"/>
+                <rect x="100" y="175" width="80" height="15" rx="3" fill="#6c757d"/>
+                <rect x="100" y="200" width="100" height="15" rx="3" fill="#6c757d"/>
+                <rect x="100" y="225" width="60" height="20" rx="3" fill="#0d6efd"/>
+                
+                <rect x="260" y="130" width="160" height="130" rx="5" fill="#495057"/>
+                <circle cx="290" cy="170" r="20" fill="#6c757d"/>
+                <circle cx="340" cy="170" r="20" fill="#6c757d"/>
+                <circle cx="390" cy="170" r="20" fill="#6c757d"/>
+                <rect x="280" y="210" width="120" height="15" rx="3" fill="#6c757d"/>
+                <rect x="300" y="235" width="80" height="20" rx="3" fill="#0d6efd"/>
+            </svg>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5 pt-5">
+    <div class="col-12 text-center mb-5">
+        <h2 class="fw-bold">Everything You Need to Succeed</h2>
+        <p class="lead">Streamline your freelance business with these powerful features</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-project-diagram fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Project Management</h5>
+                <p class="card-text">Track all your projects from start to finish. Set deadlines, manage tasks, and monitor progress in real-time.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-users fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Client Management</h5>
+                <p class="card-text">Keep all your client information organized and accessible. Link clients to projects and track client-specific performance.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-clock fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Time Tracking</h5>
+                <p class="card-text">Track billable hours with precision. Start and stop timers for specific tasks and generate detailed time reports.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-file-invoice-dollar fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Invoicing</h5>
+                <p class="card-text">Create professional invoices in seconds. Track payment status and send reminders for overdue payments.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-chart-bar fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Reports & Analytics</h5>
+                <p class="card-text">Gain valuable insights into your business with powerful reporting tools. Track earnings, project status, and more.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="feature-icon mb-3">
+                    <i class="fas fa-calendar-alt fa-3x text-primary"></i>
+                </div>
+                <h5 class="card-title">Calendar View</h5>
+                <p class="card-text">Never miss a deadline again. View all your tasks, projects, and invoice due dates in a clear calendar format.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5 pt-5">
+    <div class="col-lg-8 mx-auto text-center">
+        <h2 class="fw-bold mb-4">Ready to boost your productivity?</h2>
+        <p class="lead mb-4">Join thousands of freelancers who use our platform to streamline their work and increase their income.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg px-5">Get Started Now</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,353 @@
+{% extends "layout.html" %}
+
+{% block styles %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('new_project') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i>New Project
+            </a>
+            <a href="{{ url_for('new_client') }}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-user-plus me-1"></i>New Client
+            </a>
+            <a href="{{ url_for('new_invoice') }}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-file-invoice-dollar me-1"></i>New Invoice
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Overview Stats -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Active Projects</h5>
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="fas fa-project-diagram fa-2x text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">{{ project_stats|selectattr('0.value', 'eq', 'In Progress')|map(attribute='1')|first|default(0) }}</h3>
+                        <div class="text-muted">
+                            {{ project_stats|selectattr('0.value', 'eq', 'New')|map(attribute='1')|first|default(0) }} new,
+                            {{ project_stats|selectattr('0.value', 'eq', 'On Hold')|map(attribute='1')|first|default(0) }} on hold
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Total Earnings</h5>
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="fas fa-dollar-sign fa-2x text-success"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">${{ "%.2f"|format(total_earnings) }}</h3>
+                        <div class="text-muted">${{ "%.2f"|format(outstanding_amount) }} outstanding</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Pending Invoices</h5>
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="fas fa-file-invoice fa-2x text-warning"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">{{ outstanding_invoices }}</h3>
+                        <div class="text-muted">${{ "%.2f"|format(outstanding_amount) }} pending</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 col-sm-6">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title text-muted">Completed Projects</h5>
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0 me-3">
+                        <i class="fas fa-check-circle fa-2x text-info"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="mb-0">{{ project_stats|selectattr('0.value', 'eq', 'Completed')|map(attribute='1')|first|default(0) }}</h3>
+                        <div class="text-muted">This year</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Projects -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>Recent Projects</h5>
+                    <a href="{{ url_for('projects') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Project</th>
+                                <th>Client</th>
+                                <th>Status</th>
+                                <th>Deadline</th>
+                                <th>Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in recent_projects %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('project', project_id=project.id) }}" class="text-decoration-none">
+                                        {{ project.title }}
+                                    </a>
+                                </td>
+                                <td>{{ project.client.name }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if project.status.value == 'New' %}bg-info
+                                        {% elif project.status.value == 'In Progress' %}bg-primary
+                                        {% elif project.status.value == 'On Hold' %}bg-warning text-dark
+                                        {% elif project.status.value == 'Completed' %}bg-success
+                                        {% endif %}">
+                                        {{ project.status.value }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if project.deadline %}
+                                        {{ project.deadline.strftime('%b %d, %Y') }}
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar" role="progressbar" style="width: {{ project.progress }}%;" 
+                                             aria-valuenow="{{ project.progress }}" aria-valuemin="0" aria-valuemax="100">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted ms-1">{{ project.progress }}%</small>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <p class="text-muted mb-0">No projects found</p>
+                                    <a href="{{ url_for('new_project') }}" class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-plus me-1"></i>Create a project
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Deadlines -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Upcoming Deadlines</h5>
+                    <a href="{{ url_for('calendar') }}" class="btn btn-sm btn-outline-primary">Calendar</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for project in upcoming_deadlines %}
+                    <div class="list-group-item 
+                        {% if project.deadline < now %}deadline-overdue
+                        {% elif (project.deadline - now).days <= 3 %}deadline-approaching
+                        {% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('project', project_id=project.id) }}" class="text-decoration-none">
+                                    {{ project.title }}
+                                </a>
+                            </h6>
+                            <small class="
+                                {% if project.deadline < now %}text-danger
+                                {% elif (project.deadline - now).days <= 3 %}text-warning
+                                {% else %}text-muted
+                                {% endif %}">
+                                {% if project.deadline < now %}
+                                    Overdue by {{ (now - project.deadline).days }} days
+                                {% elif (project.deadline - now).days == 0 %}
+                                    Due today
+                                {% elif (project.deadline - now).days == 1 %}
+                                    Due tomorrow
+                                {% else %}
+                                    Due in {{ (project.deadline - now).days }} days
+                                {% endif %}
+                            </small>
+                        </div>
+                        <p class="mb-1">Client: {{ project.client.name }}</p>
+                        <small>Deadline: {{ project.deadline.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item py-4 text-center">
+                        <p class="text-muted mb-0">No upcoming deadlines in the next 7 days</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-4">
+        <!-- Project Status Chart -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Project Status</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="projectStatusChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <!-- Client Distribution -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Top Clients</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for client in client_stats %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('client', client_id=client.id) }}" class="text-decoration-none">
+                                    {{ client.name }}
+                                </a>
+                            </h6>
+                            <span class="badge bg-primary rounded-pill">{{ client.project_count }} projects</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item py-4 text-center">
+                        <p class="text-muted mb-0">No clients found</p>
+                        <a href="{{ url_for('new_client') }}" class="btn btn-sm btn-primary mt-2">
+                            <i class="fas fa-user-plus me-1"></i>Add a client
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Time Logs -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Time Logs</h5>
+                    <a href="{{ url_for('timetracking') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for log in recent_time_logs %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('project', project_id=log.project_id) }}" class="text-decoration-none">
+                                    {{ log.project.title }}
+                                </a>
+                            </h6>
+                            <small class="text-muted">
+                                {% if log.duration %}
+                                    {{ (log.duration / 3600)|round(1) }} hrs
+                                {% else %}
+                                    In progress
+                                {% endif %}
+                            </small>
+                        </div>
+                        <p class="mb-1">
+                            {% if log.task %}
+                                Task: {{ log.task.title }}
+                            {% else %}
+                                <span class="text-muted">No specific task</span>
+                            {% endif %}
+                        </p>
+                        <small class="text-muted">
+                            {{ log.start_time.strftime('%b %d, %Y, %I:%M %p') }}
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="list-group-item py-4 text-center">
+                        <p class="text-muted mb-0">No time logs found</p>
+                        <a href="{{ url_for('new_time_log') }}" class="btn btn-sm btn-primary mt-2">
+                            <i class="fas fa-plus me-1"></i>Add time log
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    // Data for project status chart
+    const projectStatusData = {
+        labels: [
+            {% for status, count in project_stats %}
+                '{{ status.value }}',
+            {% endfor %}
+        ],
+        values: [
+            {% for status, count in project_stats %}
+                {{ count }},
+            {% endfor %}
+        ]
+    };
+
+    // Data for priority chart
+    const priorityData = {
+        labels: [
+            {% for priority, count in priority_stats %}
+                '{{ priority.value }}',
+            {% endfor %}
+        ],
+        values: [
+            {% for priority, count in priority_stats %}
+                {{ count }},
+            {% endfor %}
+        ]
+    };
+
+    // Initialize dashboard charts
+    document.addEventListener('DOMContentLoaded', function() {
+        initDashboardCharts(projectStatusData, priorityData);
+    });
+</script>
+{% endblock %}

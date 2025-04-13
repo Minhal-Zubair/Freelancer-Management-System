@@ -1,0 +1,231 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+    <h1 class="h2">
+        <i class="fas fa-tasks me-2"></i>{{ legend }} for 
+        <a href="{{ url_for('project', project_id=project.id) }}" class="text-decoration-none">
+            {{ project.title }}
+        </a>
+    </h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-md-10 mx-auto">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Task Title</label>
+                        {{ form.title(class="form-control", id="title") }}
+                        {% if form.title.errors %}
+                            {% for error in form.title.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="status" class="form-label">Status</label>
+                            {{ form.status(class="form-select", id="status") }}
+                            {% if form.status.errors %}
+                                {% for error in form.status.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="priority" class="form-label">Priority</label>
+                            {{ form.priority(class="form-select", id="priority") }}
+                            {% if form.priority.errors %}
+                                {% for error in form.priority.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label">Start Date</label>
+                            {{ form.start_date(class="form-control", id="start_date", type="datetime-local") }}
+                            {% if form.start_date.errors %}
+                                {% for error in form.start_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="due_date" class="form-label">Due Date</label>
+                            {{ form.due_date(class="form-control", id="due_date", type="datetime-local") }}
+                            {% if form.due_date.errors %}
+                                {% for error in form.due_date.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="parent_id" class="form-label">Depends On Task</label>
+                        {{ form.parent_id(class="form-select", id="parent_id") }}
+                        {% if form.parent_id.errors %}
+                            {% for error in form.parent_id.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                        <small class="text-muted">Select if this task depends on another task's completion</small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="description" class="form-label">Description</label>
+                        {{ form.description(class="form-control", id="description", rows="4") }}
+                        {% if form.description.errors %}
+                            {% for error in form.description.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('project', project_id=project.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        {% if task %}
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Task Dependencies</h5>
+            </div>
+            <div class="card-body">
+                <h6>This Task Depends On:</h6>
+                {% if task.parent %}
+                <div class="alert alert-info">
+                    <strong>{{ task.parent.title }}</strong>
+                    <div>Status: {{ task.parent.status.value }}</div>
+                    {% if task.parent.due_date %}
+                    <small>Due Date: {{ task.parent.due_date.strftime('%b %d, %Y') }}</small>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-muted">This task doesn't depend on any other task.</p>
+                {% endif %}
+                
+                <hr>
+                
+                <h6>Tasks Depending on This Task:</h6>
+                {% if task.dependencies %}
+                <div class="list-group">
+                    {% for dependent_task in task.dependencies %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ dependent_task.title }}</h6>
+                            <span class="badge 
+                                {% if dependent_task.status.value == 'Not Started' %}bg-secondary
+                                {% elif dependent_task.status.value == 'In Progress' %}bg-primary
+                                {% elif dependent_task.status.value == 'Completed' %}bg-success
+                                {% elif dependent_task.status.value == 'Blocked' %}bg-danger
+                                {% endif %}">
+                                {{ dependent_task.status.value }}
+                            </span>
+                        </div>
+                        {% if dependent_task.due_date %}
+                        <small class="text-muted">Due Date: {{ dependent_task.due_date.strftime('%b %d, %Y') }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">No tasks depend on this task.</p>
+                {% endif %}
+                
+                {% if task.status.value == 'Completed' and task.dependencies %}
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Note:</strong> Completing this task will affect the dependent tasks.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Time Logs for This Task</h5>
+                    <a href="{{ url_for('new_time_log') }}?project_id={{ project.id }}&task_id={{ task.id }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>Add Time
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for log in task.time_logs %}
+                    <div class="list-group-item time-log-item {% if not log.is_billable %}non-billable{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <div>
+                                <small class="text-muted">{{ log.start_time.strftime('%b %d, %Y, %I:%M %p') }}</small>
+                                {% if log.end_time %}
+                                    <small class="text-muted">to {{ log.end_time.strftime('%I:%M %p') }}</small>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">
+                                {% if log.duration %}
+                                    {{ (log.duration / 3600)|round(1) }} hrs
+                                {% else %}
+                                    In progress
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% if log.notes %}
+                        <p class="mb-1"><small>{{ log.notes }}</small></p>
+                        {% endif %}
+                        {% if not log.is_billable %}
+                        <span class="badge bg-secondary">Non-billable</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="list-group-item py-4 text-center">
+                        <p class="text-muted mb-0">No time logs recorded for this task yet</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Total Time:</strong>
+                        {{ (task.time_logs|sum(attribute='duration')/3600)|round(1) }} hours
+                    </div>
+                    <button type="button" id="startTimerBtn" class="btn btn-sm btn-success">
+                        <i class="fas fa-play me-1"></i>Start Timer
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if task %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle start timer button click
+        const startTimerBtn = document.getElementById('startTimerBtn');
+        if (startTimerBtn) {
+            startTimerBtn.addEventListener('click', function() {
+                // Redirect to project page with timer start parameters
+                window.location.href = "{{ url_for('project', project_id=project.id) }}?start_timer=true&task_id={{ task.id }}";
+            });
+        }
+    });
+</script>
+{% endif %}
+{% endblock %}

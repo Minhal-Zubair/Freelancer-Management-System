@@ -1,0 +1,219 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+    <h1 class="h2"><i class="fas fa-users me-2"></i>Clients</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('new_client') }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i>Add New Client
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="input-group">
+            <input type="text" class="form-control" id="clientSearchInput" placeholder="Search clients...">
+            <button class="btn btn-outline-secondary" type="button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4 mb-4">
+        <select class="form-select" id="clientTypeFilter">
+            <option value="all">All Client Types</option>
+            <option value="Individual">Individual</option>
+            <option value="Agency">Agency</option>
+            <option value="Recurring">Recurring</option>
+        </select>
+    </div>
+</div>
+
+<div class="row g-3">
+    {% for client in clients.items %}
+    <div class="col-lg-4 col-md-6 client-item" data-client-type="{{ client.classification.value }}">
+        <div class="card client-card h-100 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">
+                        <a href="{{ url_for('client', client_id=client.id) }}" class="text-decoration-none">
+                            {{ client.name }}
+                        </a>
+                    </h5>
+                    <span class="badge 
+                        {% if client.classification.value == 'Individual' %}bg-info
+                        {% elif client.classification.value == 'Agency' %}bg-primary
+                        {% elif client.classification.value == 'Recurring' %}bg-success
+                        {% endif %}">
+                        {{ client.classification.value }}
+                    </span>
+                </div>
+                
+                <div class="mb-3">
+                    {% if client.email %}
+                    <p class="mb-1">
+                        <i class="fas fa-envelope text-muted me-2"></i>
+                        <a href="mailto:{{ client.email }}" class="text-decoration-none">{{ client.email }}</a>
+                    </p>
+                    {% endif %}
+                    
+                    {% if client.phone %}
+                    <p class="mb-1">
+                        <i class="fas fa-phone text-muted me-2"></i>
+                        <a href="tel:{{ client.phone }}" class="text-decoration-none">{{ client.phone }}</a>
+                    </p>
+                    {% endif %}
+                    
+                    {% if client.organization %}
+                    <p class="mb-0">
+                        <i class="fas fa-building text-muted me-2"></i>
+                        {{ client.organization }}
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <hr>
+                
+                <div class="row g-2 text-center">
+                    <div class="col-4">
+                        <div class="p-2 border rounded">
+                            <h6 class="mb-0">{{ client_stats[client.id]['projects_count'] }}</h6>
+                            <small class="text-muted">Projects</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded">
+                            <h6 class="mb-0">{{ client_stats[client.id]['completed_projects'] }}</h6>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded">
+                            <h6 class="mb-0">${{ "%.0f"|format(client_stats[client.id]['total_earnings']) }}</h6>
+                            <small class="text-muted">Revenue</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('client', client_id=client.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-eye me-1"></i>View
+                    </a>
+                    <a href="{{ url_for('edit_client', client_id=client.id) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-users fa-4x text-muted"></i>
+        </div>
+        <h4>No clients found</h4>
+        <p class="text-muted">Create your first client to get started</p>
+        <a href="{{ url_for('new_client') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Add New Client
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+{% if clients.pages > 1 %}
+<nav aria-label="Clients pagination" class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if clients.has_prev %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('clients', page=clients.prev_num) }}" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&laquo;</span>
+        </li>
+        {% endif %}
+        
+        {% for page_num in clients.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if clients.page == page_num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ page_num }}</span>
+                </li>
+                {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('clients', page=page_num) }}">{{ page_num }}</a>
+                </li>
+                {% endif %}
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        {% if clients.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{{ url_for('clients', page=clients.next_num) }}" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&raquo;</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Client search functionality
+        const searchInput = document.getElementById('clientSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                const searchValue = this.value.toLowerCase();
+                const clientItems = document.querySelectorAll('.client-item');
+                
+                clientItems.forEach(item => {
+                    const clientName = item.querySelector('.card-title').textContent.toLowerCase();
+                    const clientEmail = item.querySelector('.fa-envelope')?.nextElementSibling?.textContent.toLowerCase() || '';
+                    const clientOrg = item.querySelector('.fa-building')?.nextElementSibling?.textContent.toLowerCase() || '';
+                    
+                    if (clientName.includes(searchValue) || clientEmail.includes(searchValue) || clientOrg.includes(searchValue)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Client type filter
+        const typeFilter = document.getElementById('clientTypeFilter');
+        if (typeFilter) {
+            typeFilter.addEventListener('change', function() {
+                const filterValue = this.value;
+                const clientItems = document.querySelectorAll('.client-item');
+                
+                clientItems.forEach(item => {
+                    const clientType = item.dataset.clientType;
+                    
+                    if (filterValue === 'all' || clientType === filterValue) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

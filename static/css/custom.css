@@ -1,0 +1,245 @@
+/* Custom styles for Freelancer Project Management System */
+
+/* General Styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    flex: 1;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Dashboard Styles */
+.stat-card {
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.progress-container {
+    margin-bottom: 0.5rem;
+}
+
+.deadline-approaching {
+    border-left: 4px solid var(--bs-warning);
+}
+
+.deadline-overdue {
+    border-left: 4px solid var(--bs-danger);
+}
+
+/* Project and Task Styles */
+.project-card {
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.project-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.task-list-item {
+    padding: 0.75rem;
+    border-left: 4px solid var(--bs-gray);
+    margin-bottom: 0.5rem;
+}
+
+.task-list-item.completed {
+    border-left: 4px solid var(--bs-success);
+    background-color: rgba(var(--bs-success-rgb), 0.05);
+}
+
+.task-list-item.in-progress {
+    border-left: 4px solid var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.05);
+}
+
+.task-list-item.high-priority {
+    border-left: 4px solid var(--bs-warning);
+}
+
+.task-list-item.urgent-priority {
+    border-left: 4px solid var(--bs-danger);
+}
+
+/* Client Styles */
+.client-card {
+    transition: all 0.3s ease;
+}
+
+.client-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Time Tracking Styles */
+#timer-display {
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: monospace;
+}
+
+.time-log-item {
+    padding: 0.5rem;
+    border-left: 3px solid var(--bs-info);
+    margin-bottom: 0.5rem;
+}
+
+.time-log-item.non-billable {
+    border-left: 3px solid var(--bs-gray);
+}
+
+/* Invoice Styles */
+.invoice-item {
+    padding: 0.75rem;
+    border-left: 4px solid var(--bs-gray);
+    margin-bottom: 0.5rem;
+}
+
+.invoice-item.paid {
+    border-left: 4px solid var(--bs-success);
+}
+
+.invoice-item.sent {
+    border-left: 4px solid var(--bs-primary);
+}
+
+.invoice-item.overdue {
+    border-left: 4px solid var(--bs-danger);
+}
+
+/* Tag Styles */
+.tag-badge {
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Calendar Styles */
+#calendar {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.fc-event {
+    cursor: pointer;
+}
+
+/* Custom Form Styles */
+.form-floating label {
+    color: var(--bs-gray-600);
+}
+
+/* Custom Checkbox Styles */
+.form-check-input:checked {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+/* Profile Styles */
+.profile-header {
+    padding: 2rem 0;
+}
+
+.profile-img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid var(--bs-gray-800);
+}
+
+/* Loading Animation */
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* File Upload Button */
+.custom-file-button input[type=file] {
+    margin-left: -2px !important;
+}
+
+.custom-file-button input[type=file]::-webkit-file-upload-button {
+    display: none;
+}
+
+.custom-file-button input[type=file]::file-selector-button {
+    display: none;
+}
+
+/* Login and Register Pages */
+.auth-container {
+    max-width: 450px;
+    margin: 2rem auto;
+}
+
+/* Error Page Styles */
+.error-page {
+    text-align: center;
+    padding: 5rem 0;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-img {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .profile-header {
+        text-align: center;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+    
+    #timer-display {
+        font-size: 1.5rem;
+    }
+}
+
+/* Dark Mode Specific Adjustments */
+[data-bs-theme=dark] .card {
+    border-color: var(--bs-gray-800);
+}
+
+[data-bs-theme=dark] .table {
+    color: var(--bs-light);
+}
+
+[data-bs-theme=dark] .form-control,
+[data-bs-theme=dark] .form-select {
+    background-color: var(--bs-gray-800);
+    border-color: var(--bs-gray-700);
+    color: var(--bs-light);
+}
+
+[data-bs-theme=dark] .form-control:focus,
+[data-bs-theme=dark] .form-select:focus {
+    background-color: var(--bs-gray-800);
+    border-color: var(--bs-primary);
+    color: var(--bs-light);
+}
+
+/* Charts and Graph Styles */
+.chart-container {
+    position: relative;
+    height: 300px;
+    margin-bottom: 2rem;
+}

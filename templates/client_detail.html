@@ -1,0 +1,407 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% if client %}
+<!-- Client View Mode -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+    <h1 class="h2">
+        <i class="fas fa-user me-2"></i>{{ client.name }}
+        <span class="badge 
+            {% if client.classification.value == 'Individual' %}bg-info
+            {% elif client.classification.value == 'Agency' %}bg-primary
+            {% elif client.classification.value == 'Recurring' %}bg-success
+            {% endif %}">
+            {{ client.classification.value }}
+        </span>
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <a href="{{ url_for('edit_client', client_id=client.id) }}" class="btn btn-sm btn-outline-primary">
+                <i class="fas fa-edit me-1"></i>Edit Client
+            </a>
+            <a href="{{ url_for('new_project') }}?client_id={{ client.id }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i>New Project
+            </a>
+            <a href="{{ url_for('new_invoice') }}?client_id={{ client.id }}" class="btn btn-sm btn-outline-success">
+                <i class="fas fa-file-invoice-dollar me-1"></i>New Invoice
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Client Info Card -->
+    <div class="col-md-4 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-transparent border-0">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Client Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    {% if client.email %}
+                    <p class="mb-2">
+                        <i class="fas fa-envelope text-muted me-2"></i>
+                        <a href="mailto:{{ client.email }}" class="text-decoration-none">{{ client.email }}</a>
+                    </p>
+                    {% endif %}
+                    
+                    {% if client.phone %}
+                    <p class="mb-2">
+                        <i class="fas fa-phone text-muted me-2"></i>
+                        <a href="tel:{{ client.phone }}" class="text-decoration-none">{{ client.phone }}</a>
+                    </p>
+                    {% endif %}
+                    
+                    {% if client.organization %}
+                    <p class="mb-2">
+                        <i class="fas fa-building text-muted me-2"></i>
+                        {{ client.organization }}
+                    </p>
+                    {% endif %}
+                    
+                    <p class="mb-0">
+                        <i class="fas fa-calendar-alt text-muted me-2"></i>
+                        Client since {{ client.date_added.strftime('%b %d, %Y') }}
+                    </p>
+                </div>
+                
+                <hr>
+                
+                <div class="mb-3">
+                    <h6 class="mb-2">Notes</h6>
+                    {% if client.notes %}
+                    <p class="mb-0">{{ client.notes }}</p>
+                    {% else %}
+                    <p class="text-muted mb-0">No notes added</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-flex justify-content-between">
+                    <button type="button" class="btn btn-sm btn-outline-danger delete-confirm" 
+                            data-bs-toggle="modal" data-bs-target="#deleteClientModal">
+                        <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                    <a href="{{ url_for('edit_client', client_id=client.id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit me-1"></i>Edit
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Financial Summary -->
+    <div class="col-md-8 mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted">Total Projects</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="fas fa-project-diagram fa-2x text-primary"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h3 class="mb-0">{{ projects|length }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted">Total Earnings</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="fas fa-dollar-sign fa-2x text-success"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h3 class="mb-0">${{ "%.2f"|format(total_earnings) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card stat-card border-0 shadow-sm h-100">
+                    <div class="card-body">
+                        <h5 class="card-title text-muted">Outstanding</h5>
+                        <div class="d-flex align-items-center">
+                            <div class="flex-shrink-0 me-3">
+                                <i class="fas fa-file-invoice-dollar fa-2x text-warning"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h3 class="mb-0">${{ "%.2f"|format(outstanding_amount) }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Projects List -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-project-diagram me-2"></i>Projects</h5>
+                    <a href="{{ url_for('new_project') }}?client_id={{ client.id }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>New Project
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Project</th>
+                                <th>Status</th>
+                                <th>Deadline</th>
+                                <th>Price</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('project', project_id=project.id) }}" class="fw-bold text-decoration-none">
+                                        {{ project.title }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="badge 
+                                        {% if project.status.value == 'New' %}bg-info
+                                        {% elif project.status.value == 'In Progress' %}bg-primary
+                                        {% elif project.status.value == 'On Hold' %}bg-warning text-dark
+                                        {% elif project.status.value == 'Completed' %}bg-success
+                                        {% endif %}">
+                                        {{ project.status.value }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if project.deadline %}
+                                        {{ project.deadline.strftime('%b %d, %Y') }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if project.price %}
+                                        ${{ "%.2f"|format(project.price) }}
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('project', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    <p class="text-muted mb-2">No projects found for this client</p>
+                                    <a href="{{ url_for('new_project') }}?client_id={{ client.id }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus me-1"></i>Create a project
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invoices List -->
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-header bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Invoices</h5>
+                    <a href="{{ url_for('new_invoice') }}?client_id={{ client.id }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-1"></i>New Invoice
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Invoice #</th>
+                                <th>Issue Date</th>
+                                <th>Due Date</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for invoice in invoices %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('invoice', invoice_id=invoice.id) }}" class="fw-bold text-decoration-none">
+                                        {{ invoice.invoice_number }}
+                                    </a>
+                                </td>
+                                <td>{{ invoice.issue_date.strftime('%b %d, %Y') }}</td>
+                                <td>{{ invoice.due_date.strftime('%b %d, %Y') }}</td>
+                                <td>${{ "%.2f"|format(invoice.total_amount) }}</td>
+                                <td>
+                                    <span class="badge 
+                                        {% if invoice.status.value == 'Draft' %}bg-secondary
+                                        {% elif invoice.status.value == 'Sent' %}bg-primary
+                                        {% elif invoice.status.value == 'Paid' %}bg-success
+                                        {% elif invoice.status.value == 'Overdue' %}bg-danger
+                                        {% elif invoice.status.value == 'Cancelled' %}bg-dark
+                                        {% endif %}">
+                                        {{ invoice.status.value }}
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('invoice', invoice_id=invoice.id) }}" class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <p class="text-muted mb-2">No invoices found for this client</p>
+                                    <a href="{{ url_for('new_invoice') }}?client_id={{ client.id }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus me-1"></i>Create an invoice
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Client Modal -->
+<div class="modal fade" id="deleteClientModal" tabindex="-1" aria-labelledby="deleteClientModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteClientModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this client? This action cannot be undone.</p>
+                <p class="text-danger mb-0">Note: You cannot delete a client who has associated projects.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form action="{{ url_for('delete_client', client_id=client.id) }}" method="POST">
+                    <button type="submit" class="btn btn-danger">Delete Client</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% elif form %}
+<!-- Client Form Mode (Create/Edit) -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+    <h1 class="h2">
+        <i class="fas fa-user me-2"></i>{{ legend }}
+    </h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 col-md-10 mx-auto">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Client Name</label>
+                        {{ form.name(class="form-control", id="name") }}
+                        {% if form.name.errors %}
+                            {% for error in form.name.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                {{ form.email(class="form-control", id="email") }}
+                                {% if form.email.errors %}
+                                    {% for error in form.email.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                {{ form.phone(class="form-control", id="phone") }}
+                                {% if form.phone.errors %}
+                                    {% for error in form.phone.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="organization" class="form-label">Organization/Company</label>
+                                {{ form.organization(class="form-control", id="organization") }}
+                                {% if form.organization.errors %}
+                                    {% for error in form.organization.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="classification" class="form-label">Client Type</label>
+                                {{ form.classification(class="form-select", id="classification") }}
+                                {% if form.classification.errors %}
+                                    {% for error in form.classification.errors %}
+                                        <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="notes" class="form-label">Notes</label>
+                        {{ form.notes(class="form-control", id="notes", rows="4") }}
+                        {% if form.notes.errors %}
+                            {% for error in form.notes.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('clients') }}" class="btn btn-outline-secondary">Cancel</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
