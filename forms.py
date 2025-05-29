@@ -5,6 +5,7 @@ from wtforms import FloatField, IntegerField, MultipleFileField, HiddenField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError, Optional
 from models import Freelancer, Client, ProjectStatus, Priority, TaskStatus, ClientType, InvoiceStatus
 from datetime import datetime
+from models import Client, Task, Project
 
 
 class RegistrationForm(FlaskForm):
@@ -66,14 +67,12 @@ class ProjectForm(FlaskForm):
     ])
     submit = SubmitField('Save Project')
     
-    def __init__(self, *args, **kwargs):
-        freelancer = kwargs.pop('freelancer', None)
+    def __init__(self, freelancer=None, *args, **kwargs):
         super(ProjectForm, self).__init__(*args, **kwargs)
-        
         if freelancer:
-            self.client_id.choices = [(client.id, client.name) 
-                                    for client in Client.query.filter_by(freelancer_id=freelancer.id).all()]
-
+            self.client_id.choices = [
+                (c.id, c.name) for c in Client.query.filter_by(freelancer_id=freelancer.id).all()
+            ]
 
 class TaskForm(FlaskForm):
     title = StringField('Task Title', validators=[DataRequired(), Length(min=2, max=100)])
@@ -152,6 +151,8 @@ class InvoiceForm(FlaskForm):
         if client_id:
             self.project_id.choices = [(0, 'No Specific Project')] + [(project.id, project.title) 
                                      for project in Project.query.filter_by(client_id=client_id).all()]
+        else:
+            self.project_id.choices = [(0, 'No Specific Project')]  # 👈 add this to prevent None     
 
 
 class TagForm(FlaskForm):
@@ -171,3 +172,19 @@ class TimerForm(FlaskForm):
     start_time = HiddenField('Start Time')
     is_running = HiddenField('Is Running', default='false')
     submit = SubmitField('Start Timer')
+    
+class SettingsForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone = StringField('Phone Number', validators=[Length(min=10, max=15)])
+    profile_image = FileField('Profile Image')
+    
+    current_password = PasswordField('Current Password')
+    new_password = PasswordField('New Password', validators=[Length(min=6, max=32)])
+    confirm_new_password = PasswordField('Confirm New Password', validators=[
+        EqualTo('new_password', message='Passwords must match')
+    ])
+    
+    change_password = SubmitField('Change Password')  # Button for changing password
+    
+    submit = SubmitField('Update Settings')

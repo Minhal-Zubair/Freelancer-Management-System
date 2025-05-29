@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4"><i class="fas fa-cog me-2"></i>Account Settings</h2>
+    
+    <div class="row">
+        <!-- Profile Info -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <strong>Edit Profile</strong>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('settings') }}" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            {{ form.name(class="form-control", id="name") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            {{ form.email(class="form-control", id="email") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone</label>
+                            {{ form.phone(class="form-control", id="phone") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="profile_image" class="form-label">Profile Image</label>
+                            {{ form.profile_image(class="form-control", id="profile_image") }}
+                            <small class="text-muted">Upload JPG, PNG or JPEG only.</small>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Password Section -->
+        <div class="col-md-6">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <strong>Change Password</strong>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('settings') }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Current Password</label>
+                            {{ form.current_password(class="form-control", id="current_password") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            {{ form.new_password(class="form-control", id="new_password") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                            {{ form.confirm_new_password(class="form-control", id="confirm_new_password") }}
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            {{ form.change_password(class="btn btn-warning text-dark") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preferences or Toggles -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light">
+            <strong>Preferences</strong>
+        </div>
+        <div class="card-body">
+            <form>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="darkModeSwitch">
+                    <label class="form-check-label" for="darkModeSwitch">Enable Dark Mode</label>
+                </div>
+                <div class="form-check form-switch mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="notificationsSwitch">
+                    <label class="form-check-label" for="notificationsSwitch">Receive Notifications</label>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Optional: Add simple JavaScript toggle alert -->
+<script>
+    document.getElementById('darkModeSwitch').addEventListener('change', function () {
+        alert("Dark mode toggled: " + (this.checked ? "ON" : "OFF"));
+    });
+</script>
+{% endblock %}

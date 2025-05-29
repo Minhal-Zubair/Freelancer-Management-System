@@ -46,6 +46,8 @@ class InvoiceStatus(enum.Enum):
 
 
 class Freelancer(db.Model, UserMixin):
+    __tablename__ = 'freelancer'  # ← was wrongly indented
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
@@ -79,6 +81,7 @@ class LoginSession(db.Model):
 
 
 class Client(db.Model):
+    __tablename__ = 'client'
     id = db.Column(db.Integer, primary_key=True)
     freelancer_id = db.Column(db.Integer, db.ForeignKey('freelancer.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
@@ -95,6 +98,7 @@ class Client(db.Model):
 
 
 class Project(db.Model):
+    __tablename__ = 'project'
     id = db.Column(db.Integer, primary_key=True)
     freelancer_id = db.Column(db.Integer, db.ForeignKey('freelancer.id'), nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
@@ -128,6 +132,7 @@ class ProjectFile(db.Model):
 
 
 class Task(db.Model):
+    __tablename__ = 'task'
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     title = db.Column(db.String(100), nullable=False)
@@ -152,6 +157,8 @@ class Task(db.Model):
 
 
 class TimeLog(db.Model):
+    __tablename__ = 'time_log'  # ← was wrongly indented
+
     id = db.Column(db.Integer, primary_key=True)
     freelancer_id = db.Column(db.Integer, db.ForeignKey('freelancer.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
@@ -165,6 +172,7 @@ class TimeLog(db.Model):
 
 
 class Invoice(db.Model):
+    __tablename__ = 'invoice'
     id = db.Column(db.Integer, primary_key=True)
     freelancer_id = db.Column(db.Integer, db.ForeignKey('freelancer.id'), nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
@@ -210,3 +218,12 @@ class ProjectTag(db.Model):
     
     # Add a unique constraint to prevent duplicate tags on a project
     __table_args__ = (db.UniqueConstraint('project_id', 'tag_id', name='unique_project_tag'),)
+    
+class Report(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    details = db.Column(db.Text, nullable=True)
+
+    def __repr__(self):
+        return f'<Report {self.title}>'

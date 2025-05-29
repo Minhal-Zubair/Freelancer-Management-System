@@ -1,6 +1,10 @@
 import os
 import secrets
 from datetime import datetime, timedelta
+
+from models import Report  
+from models import Invoice  # Assuming you have an Invoice model
+from datetime import timedelta
 from flask import render_template, url_for, flash, redirect, request, abort, jsonify, send_from_directory
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.utils import secure_filename
@@ -11,6 +15,8 @@ from forms import (RegistrationForm, LoginForm, FreelancerProfileForm, ClientFor
                  TaskForm, TimeLogForm, InvoiceForm, TagForm, SearchForm, TimerForm)
 from sqlalchemy import func, desc, and_, or_
 import utils
+from forms import SettingsForm
+from datetime import datetime
 
 
 # Home Route
@@ -96,6 +102,7 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
+    now = datetime.utcnow()  # Add this line
     # Recent projects (last 5)
     recent_projects = Project.query.filter_by(freelancer_id=current_user.id) \
                             .order_by(Project.last_updated.desc()).limit(5).all()
@@ -157,7 +164,8 @@ def dashboard():
                          total_earnings=total_earnings,
                          outstanding_amount=outstanding_amount,
                          outstanding_invoices=len(outstanding_invoices),
-                         client_stats=client_stats)
+                         client_stats=client_stats,
+                         now=now)
 
 
 # Profile Management
@@ -383,7 +391,6 @@ def delete_client(client_id):
     return redirect(url_for('clients'))
 
 
-# Project Management
 @app.route('/projects')
 @login_required
 def projects():
@@ -400,7 +407,8 @@ def projects():
     # Order projects by deadline (upcoming first) and then by creation date
     projects = query.order_by(
         Project.status,
-        Project.deadline.asc().nullslast(),
+        (Project.deadline == None).asc(),  # Move NULL values in deadline to the end
+        Project.deadline.asc(),
         Project.date_created.desc()
     ).paginate(page=page, per_page=10)
     
@@ -410,11 +418,11 @@ def projects():
                          status_filter=status_filter,
                          project_statuses=[status.value for status in ProjectStatus])
 
-
 @app.route('/projects/new', methods=['GET', 'POST'])
 @login_required
 def new_project():
     form = ProjectForm(freelancer=current_user)
+    print("Client choices:", form.client_id.choices)
     
     if form.validate_on_submit():
         project = Project(
@@ -454,6 +462,8 @@ def new_project():
     
     return render_template('project_detail.html',
                          title='New Project',
+                         timedelta=timedelta,
+                         now= datetime.utcnow(),
                          form=form,
                          legend='New Project')
 
@@ -495,7 +505,9 @@ def project(project_id):
     
     return render_template('project_detail.html',
                          title=project.title,
+                         timedelta=timedelta,
                          project=project,
+                         now= datetime.utcnow(),
                          tasks=tasks,
                          time_logs=time_logs,
                          total_hours=total_hours,
@@ -561,6 +573,8 @@ def edit_project(project_id):
     return render_template('project_detail.html',
                          title=f'Edit {project.title}',
                          form=form,
+                         timedelta=timedelta,
+                          now= datetime.utcnow(),
                          legend='Edit Project',
                          project=project)
 
@@ -822,13 +836,20 @@ def timetracking():
                          projects=projects,
                          project_filter=project_filter,
                          date_filter=date_filter,
-                         total_hours=total_hours)
+                         total_hours=total_hours,
+                         timedelta=timedelta,
+                         now=datetime.now())
 
 
 @app.route('/timetracking/new', methods=['GET', 'POST'])
 @login_required
 def new_time_log():
     form = TimeLogForm(freelancer=current_user)
+    
+    # ✅ Always set project choices
+    form.project_id.choices = [(p.id, p.title) for p in Project.query.filter_by(freelancer_id=current_user.id).all()]
+    # ✅ Default task choices (in case no project is selected yet)
+    form.task_id.choices = [(0, 'No Specific Task')]
     
     # Handle dynamic task dropdown
     if request.args.get('project_id'):
@@ -1066,13 +1087,34 @@ def invoices():
 def new_invoice():
     form = InvoiceForm(freelancer=current_user)
     
+    # Default projects list if client not selected
+    projects = []
+    
+    # Fetch clients for the client dropdown
+     # Fetch clients for the current user
+    clients = Client.query.filter_by(freelancer_id=current_user.id).order_by(Client.name).all()
+   
+    # If client_id is passed in URL or form, fetch projects
+    # print(f"client_id.id: {form.client_id.data }, type: {type(form.client_id.data )}")
+    client_id = form.client_id.data or request.args.get('client_id', type=int)
+    print(f"client_id.id: {form.client_id.data }, type: {type(form.client_id.data )}")
+    if client_id:
+        projects = Project.query.filter_by(client_id=client_id).all()
+    
     # Handle dynamic project dropdown based on selected client
     if request.args.get('client_id'):
         client_id = int(request.args.get('client_id'))
         form.client_id.data = client_id
         form.project_id.choices = [(0, 'No Specific Project')] + [(project.id, project.title) 
                                   for project in Project.query.filter_by(client_id=client_id).all()]
-    
+    if request.method == 'POST':
+        print("Form submitted.")
+        if not form.validate():
+            print("Form validation failed:", form.errors);
+            for field in form:
+                print(f"{field.name} = {field.data}")
+
+
     if form.validate_on_submit():
         # Calculate tax amount and total
         amount = form.amount.data
@@ -1111,8 +1153,58 @@ def new_invoice():
     return render_template('invoice_detail.html',
                          title='New Invoice',
                          form=form,
+                         clients=clients,
+                         projects=projects,
                          legend='New Invoice')
 
+@app.route('/invoice/create', methods=['GET', 'POST'])
+def create_invoice():
+    freelancer = current_user  # Adjust if you're not using Flask-Login
+
+    # Get the client ID from the form POST, if available
+    client_id = request.form.get('client_id', type=int)
+
+    # Pass freelancer and client_id to the form constructor
+    form = InvoiceForm(freelancer=freelancer, client_id=client_id)
+
+    # Ensure project_id choices are set correctly for both GET and POST
+    if client_id:
+        projects = Project.query.filter_by(client_id=client_id).all()
+        form.project_id.choices = [(0, 'No Specific Project')] + [(p.id, p.title) for p in projects]
+    else:
+        projects = []
+        form.project_id.choices = [(0, 'No Specific Project')]
+
+    # Always populate clients for the dropdown
+    clients = Client.query.filter_by(freelancer_id=freelancer.id).all()
+
+    # ✅ Handle form submission
+    if form.validate_on_submit():
+        # Create invoice logic here
+        invoice = Invoice(
+            freelancer_id=freelancer.id,
+            client_id=form.client_id.data,
+            project_id=form.project_id.data if form.project_id.data != 0 else None,
+            title=form.title.data,
+            issue_date=form.issue_date.data,
+            due_date=form.due_date.data,
+            amount=form.amount.data,
+            tax_rate=form.tax_rate.data or 0,
+            notes=form.notes.data,
+            status=form.status.data,
+            payment_method=form.payment_method.data,
+            transaction_id=form.transaction_id.data,
+            payment_date=form.payment_date.data,
+        )
+
+        db.session.add(invoice)
+        db.session.commit()
+
+        flash("Invoice created successfully!", "success")
+        return redirect(url_for('dashboard'))  # Change to your dashboard or invoice list
+
+    # ✅ Render the form page (with clients and projects populated)
+    return render_template('invoice_form.html', form=form, clients=clients, projects=projects)
 
 @app.route('/invoices/<int:invoice_id>')
 @login_required
@@ -1138,6 +1230,9 @@ def edit_invoice(invoice_id):
         abort(403)
     
     form = InvoiceForm(freelancer=current_user)
+    
+     # Fetch clients for the client dropdown
+    clients = Client.query.all()
     
     # Set project choices based on selected client
     form.project_id.choices = [(0, 'No Specific Project')] + [(project.id, project.title) 
@@ -1206,6 +1301,19 @@ def delete_invoice(invoice_id):
     
     flash('Invoice has been deleted!', 'success')
     return redirect(url_for('invoices'))
+
+@app.route('/api/projects_by_client/<int:client_id>')
+@login_required
+def projects_by_client(client_id):
+    # Make sure client belongs to the current user
+    client = Client.query.filter_by(id=client_id, freelancer_id=current_user.id).first_or_404()
+    projects = Project.query.filter_by(client_id=client_id).all()
+    return jsonify({
+        "projects": [{"id": p.id, "title": p.title} for p in projects]
+    })
+
+
+
 
 
 # Calendar & Reports
@@ -1453,11 +1561,24 @@ def search():
                          query=query,
                          results=results)
 
-
-@app.route('/settings')
+@app.route('/reports/<int:report_id>')
 @login_required
-def settings():
-    return render_template('settings.html', title='Settings')
+def view_report(report_id):
+    # Fetch the report by its ID from the database
+    report = Report.query.get(report_id)  # Use SQLAlchemy to fetch by ID
+
+    # If the report doesn't exist, show a flash message and redirect
+    if not report:
+        flash('Report not found', 'danger')
+        return redirect(url_for('reports'))  # Redirect to the reports page
+
+    # Render the template to display the report details
+    return render_template('view_report.html', report=report)
+
+# @app.route('/settings')
+# @login_required
+# def settings():
+#   return render_template('settings.html', title='Settings') -->
 
 
 @app.route('/api/check-duplicate-email', methods=['POST'])
@@ -1619,3 +1740,50 @@ def forbidden(e):
 def internal_server_error(e):
     return render_template('error.html', title='Server Error', error_code=500, 
                          message='An internal server error occurred.'), 500
+    
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    form = SettingsForm()
+
+    if form.validate_on_submit():
+        # Update user info
+        current_user.name = form.name.data
+        current_user.email = form.email.data
+        current_user.phone = form.phone.data
+        # You can add code to save to the database, handle images, etc.
+
+        flash('Settings updated successfully!', 'success')
+        return redirect(url_for('settings'))
+
+    # Pre-fill form with current user info
+    form.name.data = current_user.name
+    form.email.data = current_user.email
+    form.phone.data = current_user.phone
+
+    return render_template('settings.html', title='Settings', form=form)
+
+@app.route("/invoice-preview")
+def invoice_preview():
+    invoice = {
+        "invoice_number": "INV-1001",
+        "status": "Paid",
+        "freelancer_name": "John Freelancer",
+        "freelancer_email": "john@example.com",
+        "freelancer_address": "123 Remote St, Anywhere",
+        "client_name": "BrightAgency",
+        "client_email": "contact@brightagency.com",
+        "client_address": "99 Biz Avenue, NY",
+        "project_title": "Marketing Campaign",
+        "issue_date": "2025-04-01",
+        "due_date": "2025-04-10",
+        "total_amount": 1200.00,
+        "notes": "Thanks for your business!",
+        "services": [
+            {"description": "Strategy Call", "hours": 2, "rate": 150},
+            {"description": "Campaign Setup", "hours": 4, "rate": 100},
+            {"description": "Performance Reporting", "hours": 2, "rate": 100}
+        ]
+    }
+
+    return render_template("invoice_detail.html", invoice=invoice)
